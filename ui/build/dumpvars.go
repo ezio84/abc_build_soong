@@ -123,7 +123,7 @@ func dumpMakeVars(ctx Context, config Config, goals, vars []string, write_soong_
 
 // Variables to print out in the top banner
 var BannerVars = []string{
-	"DU_VERSION",
+	"ABC_VERSION",
 	"TARGET_BUILD_VARIANT",
 	"TARGET_ARCH",
 	"TARGET_ARCH_VARIANT",
