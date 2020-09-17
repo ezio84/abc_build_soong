@@ -53,55 +53,6 @@ func parsePathDir(dir string) []string {
 	return ret
 }
 
-// A "lite" version of SetupPath used for dumpvars, or other places that need
-// minimal overhead (but at the expense of logging). If tmpDir is empty, the
-// default TMPDIR is used from config.
-func SetupLitePath(ctx Context, config Config, tmpDir string) {
-	if config.pathReplaced {
-		return
-	}
-
-	ctx.BeginTrace(metrics.RunSetupTool, "litepath")
-	defer ctx.EndTrace()
-
-	origPath, _ := config.Environment().Get("PATH")
-
-	if tmpDir == "" {
-		tmpDir, _ = config.Environment().Get("TMPDIR")
-	}
-	myPath := filepath.Join(tmpDir, "path")
-	ensureEmptyDirectoriesExist(ctx, myPath)
-
-	os.Setenv("PATH", origPath)
-	for name, pathConfig := range paths.Configuration {
-		if !pathConfig.Symlink {
-			continue
-		}
-
-		origExec, err := exec.LookPath(name)
-		if err != nil {
-			continue
-		}
-		origExec, err = filepath.Abs(origExec)
-		if err != nil {
-			continue
-		}
-
-		err = os.Symlink(origExec, filepath.Join(myPath, name))
-		if err != nil {
-			ctx.Fatalln("Failed to create symlink:", err)
-		}
-	}
-
-	myPath, _ = filepath.Abs(myPath)
-
-	prebuiltsPath, _ := filepath.Abs("prebuilts/build-tools/path/" + runtime.GOOS + "-x86")
-	myPath = prebuiltsPath + string(os.PathListSeparator) + myPath
-
-	config.Environment().Set("PATH", myPath)
-	config.pathReplaced = true
-}
-
 func SetupPath(ctx Context, config Config) {
 	if config.pathReplaced {
 		return
